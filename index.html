@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌸 22 memories · 22 lines for you</title>
+  <!-- fonts & base -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #fbe9f0;
+      overflow-x: hidden;
+      color: #2d3e4f;
+      cursor: default;
+    }
+
+    /* cursor sparkle trail */
+    .spark-trail {
+      position: fixed;
+      width: 10px; height: 10px;
+      background: radial-gradient(circle, #fff2c0, #ffb3d9);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      box-shadow: 0 0 25px #ffb7c5, 0 0 45px #ffe0b0;
+      mix-blend-mode: screen;
+      transition: transform 0.05s linear;
+    }
+
+    /* particle canvas bg */
+    #particles {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* soft gradient sections */
+    .section-1 { background: linear-gradient(145deg, #ffe9f3, #f3d7f9); } /* pink→lavender */
+    .section-2 { background: linear-gradient(145deg, #e1f1fd, #fdeff2); } /* sky blue→peach */
+    .section-3 { background: linear-gradient(145deg, #fde9df, #fef3d9); } /* peach→light gold */
+    .section-4 { background: linear-gradient(145deg, #f0e1fa, #ffe6f0); } /* lavender+pink */
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 2.5rem;
+      box-shadow: 0 20px 40px rgba(255, 180, 200, 0.25);
+      border: 1px solid rgba(255,255,255,0.6);
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* animations */
+    @keyframes zoomIn {
+      0% { opacity: 0; transform: scale(0.7); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .animate-zoom { animation: zoomIn 1s ease forwards; }
+
+    @keyframes slideUp {
+      0% { opacity: 0; transform: translateY(40px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-slide-up { animation: slideUp 0.9s cubic-bezier(0.2,0.9,0.1,1) forwards; }
+
+    .glow-text {
+      text-shadow: 0 0 8px #ffb3cb, 0 0 18px #ffc9d9;
+    }
+
+    /* floating hearts */
+    .heart {
+      position: fixed;
+      font-size: 1.8rem;
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 5;
+      animation: floatUp 8s linear infinite;
+      bottom: -10%;
+      color: #ffa5b9;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+      100% { transform: translateY(-100vh) rotate(15deg); opacity: 0; }
+    }
+
+    /* hero typed */
+    #typed-text {
+      font-size: clamp(2.5rem, 10vw, 5rem);
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      color: #4f3b4a;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 3px solid #c28e9e;
+      width: 0;
+      animation: typing 4s steps(30, end) forwards, blinkCursor 0.8s infinite;
+      margin: 0 auto;
+    }
+    @keyframes typing { to { width: 100%; } }
+    @keyframes blinkCursor { 50% { border-color: transparent; } }
+
+    .balloon {
+      position: absolute; width: 40px; height: 50px;
+      background: #ffb6c1; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      box-shadow: inset -5px -5px 10px rgba(0,0,0,0.03);
+      animation: sway 5s infinite alternate ease-in-out;
+    }
+    .balloon::after {
+      content: ''; position: absolute; bottom: -12px; left: 18px;
+      width: 2px; height: 40px; background: #a17f7f;
+    }
+    @keyframes sway {
+      0% { transform: translateX(0) rotate(2deg); }
+      100% { transform: translateX(25px) rotate(-3deg); }
+    }
+
+    /* ----- photo + line pairs (grid) ----- */
+    .pairs-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 3.5rem;
+      margin: 4rem 0;
+    }
+    .memory-pair {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2rem;
+      background: rgba(255,255,250,0.3);
+      backdrop-filter: blur(6px);
+      border-radius: 3rem;
+      padding: 1.8rem 2rem;
+      box-shadow: 0 20px 30px -10px rgba(255,170,190,0.4);
+      transition: transform 0.3s ease, box-shadow 0.4s;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s ease, transform 0.8s ease, box-shadow 0.3s;
+    }
+    .memory-pair.reveal {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .memory-pair:hover {
+      box-shadow: 0 30px 40px -8px #fba6c2;
+      transform: scale(1.01) translateY(-3px);
+    }
+
+    .pair-photo {
+      flex: 1 1 200px;
+      max-width: 260px;
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 20px 25px -10px rgba(240,120,140,0.5);
+      transition: transform 0.3s;
+    }
+    .pair-photo img {
+      width: 100%; height: 220px;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.6s;
+    }
+    .pair-photo:hover img {
+      transform: scale(1.1);
+    }
+
+    .pair-line {
+      flex: 2 1 300px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 400;
+      line-height: 1.6;
+      color: #2a4055;
+      padding: 0.8rem 1.2rem;
+      background: rgba(255,255,255,0.5);
+      border-radius: 3rem 3rem 3rem 0.8rem;
+      box-shadow: 0 8px 18px #ffe7ed;
+      backdrop-filter: blur(2px);
+      transition: all 0.3s;
+    }
+    .pair-line:hover {
+      background: #ffffffb3;
+      box-shadow: 0 12px 28px #fec5d0;
+    }
+
+    /* lightbox */
+    .lightbox {
+      display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+      align-items: center; justify-content: center; z-index: 1000;
+    }
+    .lightbox.active { display: flex; }
+    .lightbox img { max-width: 85%; max-height: 85%; border-radius: 40px; border: 5px solid white; }
+
+    /* music toggle */
+    .btn-music {
+      position: fixed; bottom: 25px; right: 25px; z-index: 100;
+      background: rgba(255,255,240,0.7); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.8); border-radius: 60px;
+      padding: 0.8rem 1.5rem; font-weight: 500; color: #5b4b5e;
+      box-shadow: 0 8px 20px rgba(255,200,220,0.5); cursor: pointer;
+      display: flex; gap: 8px; transition: 0.3s;
+    }
+    .btn-music:hover { background: #ffffffc9; transform: scale(1.03); }
+
+    @media (max-width: 650px) {
+      .memory-pair { flex-direction: column; text-align: center; }
+      .pair-photo { max-width: 90%; }
+      .pair-line { font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="spark-trail" id="spark"></div>
+  <canvas id="particles"></canvas>
+  <audio id="bg-music" loop preload="none">
+    <source src="music/song.mp3" type="audio/mpeg">
+  </audio>
+  <button class="btn-music" id="musicToggle">🎵  soft melody  <span id="musicIcon">🔇</span></button>
+  <div id="hearts-field"></div>
+
+  <!-- hero section -->
+  <section class="section-1" style="min-height: 90vh; display: flex; align-items: center;">
+    <div class="container" style="text-align: center; position: relative;">
+      <div class="balloon" style="left: 5%; top: 20%;"></div>
+      <div class="balloon" style="left: 80%; top: 30%; background: #b7d9f0;"></div>
+      <div class="balloon" style="left: 15%; top: 70%; background: #fbe4b0;"></div>
+      <h1 id="typed-text" class="animate-zoom">Happy Birthday Shrija 🩷</h1>
+      <p class="animate-slide-up glow-text" style="font-size: 2rem;">This is just a small gift from my side.</p>
+    </div>
+  </section>
+
+  <!-- special message (sky blue) -->
+  <section class="section-2">
+    <div class="container glass-card" style="margin: 2rem auto;">
+      <h2 class="glow-text" style="font-size: 2.2rem;">💫 For my best friend, who fills my life with warmth. 💖</h2>
+      <p style="font-size: 1.5rem; font-weight: 300;">The Bond We Share</p>
+    </div>
+  </section>
+
+  <!-- 22 PHOTO + LINE PAIRS (exactly one line per picture) -->
+  <section class="section-3">
+    <div class="container">
+      <h2 class="glow-text" style="font-size: 2.6rem; text-align: center; margin-bottom: 1rem;">Every photo holds a memory, Each line carries my genuine feelings.</h2>
+      <div class="pairs-grid" id="pairsContainer"></div>
+    </div>
+  </section>
+
+  <!-- final glowing section -->
+  <section class="section-4" style="padding: 4rem 0;">
+    <div class="container glass-card" style="text-align: center;">
+      <h2 class="glow-text" style="font-size: 3rem;">You are my Special Friend Forever 💖</h2>
+      <p style="font-size: 1.8rem; margin-top: 1.5rem;">always & always</p>
+    </div>
+  </section>
+
+  <!-- lightbox -->
+  <div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+    <img id="lightboxImg" src="" alt="enlarged">
+  </div>
+
+  <script>
+    (function() {
+      // ----- SPARK TRAIL -----
+      const spark = document.getElementById('spark');
+      document.addEventListener('mousemove', (e) => {
+        spark.style.transform = `translate(${e.clientX - 5}px, ${e.clientY - 5}px)`;
+      });
+
+      // ----- FLOATING HEARTS -----
+      const heartsField = document.getElementById('hearts-field');
+      setInterval(() => {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.innerHTML = '❤️';
+        heart.style.left = Math.random() * 100 + '%';
+        heart.style.fontSize = (Math.random() * 30 + 15) + 'px';
+        heart.style.animationDuration = (Math.random() * 5 + 5) + 's';
+        heartsField.appendChild(heart);
+        setTimeout(() => heart.remove(), 10000);
+      }, 600);
+
+      // ----- PARTICLES (canvas background) -----
+      const canvas = document.getElementById('particles');
+      const ctx = canvas.getContext('2d');
+      let width, height, particles = [];
+
+      function initParticles() {
+        width = window.innerWidth; height = window.innerHeight;
+        canvas.width = width; canvas.height = height;
+        particles = [];
+        for (let i = 0; i < 70; i++) {
+          particles.push({
+            x: Math.random() * width, y: Math.random() * height,
+            radius: Math.random() * 4 + 1,
+            speedX: (Math.random() - 0.5) * 0.3,
+            speedY: (Math.random() - 0.5) * 0.15,
+            color: `rgba(255, ${Math.floor(160+Math.random()*80)}, 210, 0.3)`
+          });
+        }
+      }
+      function drawParticles() {
+        ctx.clearRect(0, 0, width, height);
+        particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
+          ctx.fillStyle = p.color;
+          ctx.fill();
+          p.x += p.speedX; p.y += p.speedY;
+          if (p.x < 0) p.x = width; if (p.x > width) p.x = 0;
+          if (p.y < 0) p.y = height; if (p.y > height) p.y = 0;
+        });
+        requestAnimationFrame(drawParticles);
+      }
+      window.addEventListener('resize', () => { initParticles(); });
+      initParticles(); drawParticles();
+
+      // ----- MUSIC TOGGLE -----
+      const music = document.getElementById('bg-music');
+      const musicBtn = document.getElementById('musicToggle');
+      const iconSpan = document.getElementById('musicIcon');
+      music.volume = 0.3;
+      musicBtn.addEventListener('click', () => {
+        if (music.paused) { music.play().catch(()=>{}); iconSpan.innerText = '🎵'; }
+        else { music.pause(); iconSpan.innerText = '🔇'; }
+      });
+
+      // ----- 22 LINES (exactly the ones provided) -----
+      const shayariLines = [
+        "You are not just a friend, you are a beautiful part of my life.",
+        "Your presence makes ordinary days feel special.",
+        "You are the smile that brightens my darkest moments.",
+        "A special friend like you is life's precious gift.",
+        "Your kindness paints my world with happiness.",
+        "You are the calm in my chaos, the peace in my storms.",
+        "Some friends stay in life, but you stay in heart forever.",
+        "Your friendship is a melody my soul loves to hear.",
+        "You make simple memories feel magical.",
+        "Life feels softer and brighter with you around.",
+        "You are a chapter of my life I never want to end.",
+        "Your laughter is my favorite sound of happiness.",
+        "You are proof that true friendship is pure magic.",
+        "Even silence feels comfortable when you are there.",
+        "You are special to me in a way that is hard to describe.",
+        "A friend like you is rarer than the brightest star.",
+        "Your support means more than words can express.",
+        "You turn ordinary moments into beautiful memories.",
+        "My world became better the day you became my friend.",
+        "You are a blessing I thank life for every day.",
+        "No label needed, you are simply irreplaceable.",
+        "Forever grateful to have a special friend like you in my life."
+      ];
+
+      // ----- YOUR 22 PHOTOS - MANUALLY CHANGE HERE -----
+      // Replace these URLs with your actual photo paths
+      const yourPhotoPaths = [
+        'images/birthday1.jpg',      // Photo 1
+        'images/birthday2.jpg',      // Photo 2
+        'images/birthday3.jpg',      // Photo 3
+        'images/birthday4.jpg',      // Photo 4
+        'images/birthday5.jpg',      // Photo 5
+        'images/birthday6.jpg',      // Photo 6
+        'images/birthday7.jpg',      // Photo 7
+        'images/birthday8.jpg',      // Photo 8
+        'images/birthday9.jpg',      // Photo 9
+        'images/birthday10.jpg',     // Photo 10
+        'images/birthday11.jpg',     // Photo 11
+        'images/birthday12.jpg',     // Photo 12
+        'images/birthday13.jpg',     // Photo 13
+        'images/birthday14.jpg',     // Photo 14
+        'images/birthday15.jpg',     // Photo 15
+        'images/birthday16.jpg',     // Photo 16
+        'images/birthday17.jpg',     // Photo 17
+        'images/birthday18.jpg',     // Photo 18
+        'images/birthday19.jpg',     // Photo 19
+        'images/birthday20.jpg',     // Photo 20
+        'images/birthday21.jpg',     // Photo 21
+        'images/birthday22.jpg'      // Photo 22
+      ];
+
+      // generate 22 pairs (photo + line)
+      const container = document.getElementById('pairsContainer');
+      for (let i = 0; i < 22; i++) {
+        const pairDiv = document.createElement('div');
+        pairDiv.className = 'memory-pair';
+
+        // photo side
+        const photoDiv = document.createElement('div');
+        photoDiv.className = 'pair-photo';
+        const img = document.createElement('img');
+        
+        // USE YOUR CUSTOM PHOTO HERE
+        img.src = yourPhotoPaths[i];  // This uses your photos instead of placeholders
+        
+        img.alt = `memory ${i+1}`;
+        img.loading = 'lazy';
+        img.onclick = (e) => {
+          e.stopPropagation();
+          document.getElementById('lightboxImg').src = img.src;
+          document.getElementById('lightbox').classList.add('active');
+        };
+        photoDiv.appendChild(img);
+
+        // line side
+        const lineDiv = document.createElement('div');
+        lineDiv.className = 'pair-line';
+        lineDiv.textContent = shayariLines[i];
+
+        pairDiv.appendChild(photoDiv);
+        pairDiv.appendChild(lineDiv);
+        container.appendChild(pairDiv);
+      }
+
+      // ----- SMOOTH SCROLL REVEAL (fade-in pairs) -----
+      const pairs = document.querySelectorAll('.memory-pair');
+      function checkReveal() {
+        const windowHeight = window.innerHeight;
+        const revealThreshold = 100;
+        pairs.forEach(pair => {
+          const rect = pair.getBoundingClientRect();
+          if (rect.top < windowHeight - revealThreshold) {
+            pair.classList.add('reveal');
+          }
+        });
+      }
+      window.addEventListener('scroll', checkReveal);
+      window.addEventListener('resize', checkReveal);
+      checkReveal(); // initial
+
+      // ----- extra sparkle effect (tiny stars) -----
+      setInterval(() => {
+        const star = document.createElement('div');
+        star.innerHTML = '✨';
+        star.style.position = 'fixed';
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.fontSize = '22px';
+        star.style.pointerEvents = 'none';
+        star.style.opacity = '0.5';
+        star.style.zIndex = '3';
+        star.style.animation = 'fadeInOut 2.5s infinite';
+        document.body.appendChild(star);
+        setTimeout(() => star.remove(), 2400);
+      }, 1800);
+
+      // tiny style for fadeInOut
+      const style = document.createElement('style');
+      style.innerHTML = `@keyframes fadeInOut { 0% { opacity:0; } 20% { opacity:0.6; } 80% { opacity:0.6; } 100% { opacity:0; } }`;
+      document.head.appendChild(style);
+    })();
+  </script>
+  <!-- additional balloon delays -->
+  <script>
+    (function secondary(){
+      document.querySelectorAll('.balloon').forEach((b,i)=> b.style.animationDelay = i*0.6+'s');
+    })();
+  </script>
+  <!-- ensure smooth load -->
+  <style>
+    .memory-pair { transition: opacity 0.7s ease, transform 0.7s ease, box-shadow 0.3s; }
+  </style>
+</body>
+</html>
